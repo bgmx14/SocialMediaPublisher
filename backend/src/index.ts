@@ -12,6 +12,7 @@ import postRoutes from './routes/postRoutes';
 import aiRoutes from './routes/aiRoutes';
 import mediaRoutes from './routes/mediaRoutes';
 import historyRoutes from './routes/historyRoutes';
+import oauthRoutes from './routes/oauthRoutes';
 
 // Initialize Express app
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/history', historyRoutes);
+app.use('/api/oauth', oauthRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

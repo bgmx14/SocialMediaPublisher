@@ -5,10 +5,12 @@ Une application web complète pour gérer, planifier et publier du contenu sur p
 ## ✨ Fonctionnalités
 
 - 📱 **Multi-plateformes** : Instagram Business, Facebook Pages, X/Twitter, LinkedIn
+- 🔐 **OAuth 2.0** : Connexion sécurisée en un clic (plus besoin de tokens manuels !)
 - ✍️ **Création de contenu** : Texte, images, vidéos
 - 🤖 **Génération IA** : Captions et descriptions automatiques (OpenAI)
 - 📅 **Calendrier intuitif** : Drag & drop pour planifier vos publications
 - ⏰ **Planification automatique** : Envoi programmé via API
+- 🔄 **Refresh automatique** : Renouvellement automatique des tokens
 - 📊 **Historique** : Suivi de toutes vos publications
 - 🔓 **Sans authentification** : Dashboard simple et direct
 
@@ -104,9 +106,16 @@ npm run dev
 - Frontend : http://localhost:5173
 - Backend API : http://localhost:3001
 
+6. **Configuration OAuth (Recommandé)**
+
+Pour une meilleure expérience utilisateur, configurez l'authentification OAuth :
+- 📖 Consultez le guide complet : **[OAUTH_SETUP.md](./OAUTH_SETUP.md)**
+- Configure les redirects URIs pour chaque plateforme
+- Plus besoin de tokens manuels, connexion en un clic !
+
 ## 📖 Utilisation
 
-### 1. Connecter vos comptes
+### 1. Connecter vos comptes (OAuth)
 - Allez dans "Comptes" et connectez vos réseaux sociaux
 - Suivez les flux OAuth pour autoriser l'application
 
@@ -125,6 +134,11 @@ npm run dev
 - Vérifiez les statuts d'envoi
 
 ## 🔧 API Endpoints
+
+### OAuth
+- `GET /api/oauth/:platform/authorize` - Initier flux OAuth
+- `GET /api/oauth/:platform/callback` - Callback OAuth
+- `POST /api/oauth/refresh/:accountId` - Rafraîchir token
 
 ### Comptes sociaux
 - `GET /api/accounts` - Liste des comptes connectés

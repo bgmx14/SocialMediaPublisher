@@ -1,22 +1,43 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { accountsApi } from '../services/api';
 import AccountCard from '../components/AccountCard';
+import OAuthButton from '../components/OAuthButton';
 import { SocialPlatform } from '../types';
-import { FiPlus } from 'react-icons/fi';
+import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function Accounts() {
   const queryClient = useQueryClient();
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newAccount, setNewAccount] = useState({
-    platform: '' as SocialPlatform,
-    account_name: '',
-    account_id: '',
-    access_token: '',
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const { data: accounts } = useQuery({
+  // Check for OAuth callback parameters
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const error = searchParams.get('error');
+    const count = searchParams.get('count');
+
+    if (success === 'true') {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+
+      const message = count
+        ? `Successfully connected ${count} account(s)!`
+        : 'Account connected successfully!';
+
+      toast.success(message);
+
+      // Clear URL parameters
+      setSearchParams({});
+    }
+
+    if (error) {
+      toast.error(decodeURIComponent(error));
+      setSearchParams({});
+    }
+  }, [searchParams, queryClient, setSearchParams]);
+
+  const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
       const res = await accountsApi.getAll();
@@ -35,30 +56,10 @@ export default function Accounts() {
     },
   });
 
-  const addMutation = useMutation({
-    mutationFn: (data: any) => accountsApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      toast.success('Account connected successfully');
-      setShowAddModal(false);
-      setNewAccount({
-        platform: '' as SocialPlatform,
-        account_name: '',
-        account_id: '',
-        access_token: '',
-      });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to connect account');
-    },
-  });
-
-  const handleAddAccount = () => {
-    if (!newAccount.platform || !newAccount.account_name || !newAccount.account_id || !newAccount.access_token) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-    addMutation.mutate(newAccount);
+  const handleConnectPlatform = (platform: SocialPlatform) => {
+    // Redirect to backend OAuth endpoint
+    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    window.location.href = `${backendUrl}/api/oauth/${platform}/authorize`;
   };
 
   const handleDelete = (accountId: number) => {
@@ -68,138 +69,100 @@ export default function Accounts() {
   };
 
   const platforms: SocialPlatform[] = ['instagram', 'facebook', 'twitter', 'linkedin'];
+  const connectedPlatforms = new Set(accounts?.map(a => a.platform) || []);
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Connected Accounts</h1>
-          <p className="text-gray-600">Manage your social media accounts</p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="btn btn-primary flex items-center gap-2"
-        >
-          <FiPlus className="w-5 h-5" />
-          Add Account
-        </button>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Social Media Accounts</h1>
+        <p className="text-gray-600">Connect your social media accounts to start publishing</p>
       </div>
 
-      {/* Accounts Grid */}
-      {accounts && accounts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accounts.map((account) => (
-            <AccountCard key={account.id} account={account} onDelete={handleDelete} />
-          ))}
+      {/* OAuth Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+        <FiCheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <h3 className="font-semibold text-blue-900 mb-1">Secure OAuth Connection</h3>
+          <p className="text-sm text-blue-800">
+            Click on a platform below to securely connect your account. You'll be redirected to the platform's
+            authorization page where you can grant permissions. Your credentials are never stored directly.
+          </p>
         </div>
-      ) : (
-        <div className="card text-center py-12">
-          <p className="text-gray-600 mb-4">No accounts connected yet</p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="btn btn-primary"
-          >
-            Connect Your First Account
-          </button>
+      </div>
+
+      {/* Connected Accounts */}
+      {accounts && accounts.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Connected Accounts ({accounts.length})
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {accounts.map((account) => (
+              <AccountCard key={account.id} account={account} onDelete={handleDelete} />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Add Account Modal */}
-      {showAddModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowAddModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Add New Account</h2>
+      {/* Connect New Accounts */}
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {accounts && accounts.length > 0 ? 'Add More Accounts' : 'Connect Your First Account'}
+        </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Platform *
-                </label>
-                <select
-                  value={newAccount.platform}
-                  onChange={(e) => setNewAccount({ ...newAccount, platform: e.target.value as SocialPlatform })}
-                  className="input"
-                >
-                  <option value="">Select platform</option>
-                  {platforms.map((platform) => (
-                    <option key={platform} value={platform} className="capitalize">
-                      {platform}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {platforms.map((platform) => (
+            <OAuthButton
+              key={platform}
+              platform={platform}
+              onConnect={handleConnectPlatform}
+              disabled={false}
+            />
+          ))}
+        </div>
+      </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Account Name *
-                </label>
-                <input
-                  type="text"
-                  value={newAccount.account_name}
-                  onChange={(e) => setNewAccount({ ...newAccount, account_name: e.target.value })}
-                  className="input"
-                  placeholder="e.g., @mycompany"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Account ID *
-                </label>
-                <input
-                  type="text"
-                  value={newAccount.account_id}
-                  onChange={(e) => setNewAccount({ ...newAccount, account_id: e.target.value })}
-                  className="input"
-                  placeholder="Platform-specific ID"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Access Token *
-                </label>
-                <textarea
-                  value={newAccount.access_token}
-                  onChange={(e) => setNewAccount({ ...newAccount, access_token: e.target.value })}
-                  className="textarea"
-                  rows={3}
-                  placeholder="Paste your access token here"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleAddAccount}
-                disabled={addMutation.isPending}
-                className="btn btn-primary flex-1"
-              >
-                {addMutation.isPending ? 'Adding...' : 'Add Account'}
-              </button>
-              <button
-                onClick={() => setShowAddModal(false)}
-                disabled={addMutation.isPending}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-            </div>
-
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> To get your access token, visit your platform's developer portal and create an app.
-                For production use, implement proper OAuth flows.
-              </p>
-            </div>
+      {/* Help Section */}
+      <div className="card bg-gray-50">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Need Help?</h3>
+        <div className="space-y-3 text-sm text-gray-700">
+          <div>
+            <strong className="text-gray-900">Instagram & Facebook:</strong>
+            <p>You'll need a Facebook Business account and an Instagram Business account linked to a Facebook Page.</p>
           </div>
+          <div>
+            <strong className="text-gray-900">Twitter / X:</strong>
+            <p>Make sure you have a Twitter Developer account and have created an app with OAuth 2.0 enabled.</p>
+          </div>
+          <div>
+            <strong className="text-gray-900">LinkedIn:</strong>
+            <p>You'll need a LinkedIn Developer app with the Marketing Developer Platform access.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Developer Setup Warning */}
+      {accounts?.length === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+          <FiAlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-yellow-900 mb-1">Developer Setup Required</h3>
+            <p className="text-sm text-yellow-800 mb-2">
+              Before connecting accounts, make sure you've configured the API credentials in your backend <code className="bg-yellow-100 px-1 rounded">.env</code> file:
+            </p>
+            <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+              <li>Facebook/Instagram: <code className="bg-yellow-100 px-1 rounded">FACEBOOK_APP_ID</code> and <code className="bg-yellow-100 px-1 rounded">FACEBOOK_APP_SECRET</code></li>
+              <li>Twitter: <code className="bg-yellow-100 px-1 rounded">TWITTER_API_KEY</code> and <code className="bg-yellow-100 px-1 rounded">TWITTER_API_SECRET</code></li>
+              <li>LinkedIn: <code className="bg-yellow-100 px-1 rounded">LINKEDIN_CLIENT_ID</code> and <code className="bg-yellow-100 px-1 rounded">LINKEDIN_CLIENT_SECRET</code></li>
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-600">Loading accounts...</div>
         </div>
       )}
     </div>
