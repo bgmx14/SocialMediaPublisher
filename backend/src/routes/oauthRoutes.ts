@@ -11,6 +11,7 @@ router.get('/facebook/callback', OAuthController.handleFacebookCallback);
 router.get('/instagram/callback', OAuthController.handleFacebookCallback); // Instagram uses Facebook OAuth
 router.get('/twitter/callback', OAuthController.handleTwitterCallback);
 router.get('/linkedin/callback', OAuthController.handleLinkedInCallback);
+router.get('/tiktok/callback', OAuthController.handleTikTokCallback);
 
 // Refresh token
 router.post('/refresh/:accountId', OAuthController.refreshToken);

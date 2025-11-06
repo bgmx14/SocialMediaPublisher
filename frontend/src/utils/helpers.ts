@@ -24,6 +24,7 @@ export function getPlatformIcon(platform: SocialPlatform): string {
     facebook: '👍',
     twitter: '🐦',
     linkedin: '💼',
+    tiktok: '🎵',
   };
   return icons[platform] || '📱';
 }
@@ -34,6 +35,7 @@ export function getPlatformColor(platform: SocialPlatform): string {
     facebook: 'bg-blue-600',
     twitter: 'bg-sky-500',
     linkedin: 'bg-blue-700',
+    tiktok: 'bg-black',
   };
   return colors[platform] || 'bg-gray-500';
 }

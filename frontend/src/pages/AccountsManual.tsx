@@ -67,7 +67,7 @@ export default function Accounts() {
     }
   };
 
-  const platforms: SocialPlatform[] = ['instagram', 'facebook', 'twitter', 'linkedin'];
+  const platforms: SocialPlatform[] = ['instagram', 'facebook', 'twitter', 'linkedin', 'tiktok'];
 
   return (
     <div className="space-y-8">

@@ -4,7 +4,7 @@ Une application web complète pour gérer, planifier et publier du contenu sur p
 
 ## ✨ Fonctionnalités
 
-- 📱 **Multi-plateformes** : Instagram Business, Facebook Pages, X/Twitter, LinkedIn
+- 📱 **Multi-plateformes** : Instagram Business, Facebook Pages, X/Twitter, LinkedIn, TikTok
 - 🔐 **OAuth 2.0** : Connexion sécurisée en un clic (plus besoin de tokens manuels !)
 - ✍️ **Création de contenu** : Texte, images, vidéos
 - 🤖 **Génération IA** : Captions et descriptions automatiques (OpenAI)

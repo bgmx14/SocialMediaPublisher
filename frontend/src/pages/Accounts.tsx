@@ -68,7 +68,7 @@ export default function Accounts() {
     }
   };
 
-  const platforms: SocialPlatform[] = ['instagram', 'facebook', 'twitter', 'linkedin'];
+  const platforms: SocialPlatform[] = ['instagram', 'facebook', 'twitter', 'linkedin', 'tiktok'];
   const connectedPlatforms = new Set(accounts?.map(a => a.platform) || []);
 
   return (

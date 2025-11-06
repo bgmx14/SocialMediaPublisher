@@ -110,7 +110,7 @@ export default function CreatePost() {
     }
   };
 
-  const platforms: SocialPlatform[] = ['instagram', 'facebook', 'twitter', 'linkedin'];
+  const platforms: SocialPlatform[] = ['instagram', 'facebook', 'twitter', 'linkedin', 'tiktok'];
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

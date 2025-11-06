@@ -1,4 +1,4 @@
-export type SocialPlatform = 'instagram' | 'facebook' | 'twitter' | 'linkedin';
+export type SocialPlatform = 'instagram' | 'facebook' | 'twitter' | 'linkedin' | 'tiktok';
 
 export type PostStatus = 'draft' | 'scheduled' | 'published' | 'failed';
 

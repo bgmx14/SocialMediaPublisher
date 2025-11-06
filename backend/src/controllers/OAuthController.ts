@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { FacebookOAuthService } from '../services/oauth/FacebookOAuthService';
 import { TwitterOAuthService } from '../services/oauth/TwitterOAuthService';
 import { LinkedInOAuthService } from '../services/oauth/LinkedInOAuthService';
+import { TikTokOAuthService } from '../services/oauth/TikTokOAuthService';
 import { AccountModel } from '../models/AccountModel';
 import { APIResponse } from '../types';
 
@@ -49,6 +50,13 @@ export class OAuthController {
         case 'linkedin':
           authUrl = LinkedInOAuthService.getAuthUrl(redirectUri, state);
           oauthStates.set(state, { platform, timestamp: Date.now() });
+          break;
+
+        case 'tiktok':
+          const tikTokPkce = TikTokOAuthService.generatePKCE();
+          codeVerifier = tikTokPkce.codeVerifier;
+          authUrl = TikTokOAuthService.getAuthUrl(redirectUri, state, tikTokPkce.codeChallenge);
+          oauthStates.set(state, { platform, codeVerifier, timestamp: Date.now() });
           break;
 
         default:
@@ -254,6 +262,61 @@ export class OAuthController {
   }
 
   /**
+   * Handle OAuth callback from TikTok
+   */
+  static async handleTikTokCallback(req: Request, res: Response) {
+    try {
+      const { code, state, error, error_description } = req.query;
+
+      if (error) {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/accounts?error=${error_description || error}`);
+      }
+
+      if (!code || !state) {
+        throw new Error('Missing code or state parameter');
+      }
+
+      const storedState = oauthStates.get(state as string);
+      if (!storedState || !storedState.codeVerifier) {
+        throw new Error('Invalid state parameter or missing code verifier');
+      }
+
+      oauthStates.delete(state as string);
+
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/oauth/tiktok/callback`;
+
+      // Exchange code for token
+      const tokenData = await TikTokOAuthService.getAccessToken(
+        code as string,
+        redirectUri,
+        storedState.codeVerifier
+      );
+
+      // Get user data
+      const userData = await TikTokOAuthService.getUserData(tokenData.access_token);
+
+      // Calculate token expiration
+      const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000).toISOString();
+
+      // Store account
+      const account = AccountModel.create({
+        platform: 'tiktok',
+        account_name: userData.display_name,
+        account_id: userData.open_id,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        token_expires_at: expiresAt,
+        is_active: true,
+      });
+
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/accounts?success=true`);
+    } catch (error: any) {
+      console.error('TikTok callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/accounts?error=${encodeURIComponent(error.message)}`);
+    }
+  }
+
+  /**
    * Refresh expired token
    */
   static async refreshToken(req: Request, res: Response) {
@@ -286,6 +349,11 @@ export class OAuthController {
 
         case 'linkedin':
           newTokenData = await LinkedInOAuthService.refreshToken(account.refresh_token);
+          expiresAt = new Date(Date.now() + newTokenData.expires_in * 1000).toISOString();
+          break;
+
+        case 'tiktok':
+          newTokenData = await TikTokOAuthService.refreshToken(account.refresh_token);
           expiresAt = new Date(Date.now() + newTokenData.expires_in * 1000).toISOString();
           break;
 

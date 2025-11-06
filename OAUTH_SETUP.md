@@ -130,6 +130,61 @@ Your app needs these scopes:
 
 ---
 
+### 4. TikTok Setup
+
+#### Create TikTok App
+
+1. Go to [TikTok for Developers](https://developers.tiktok.com/)
+2. Click **Manage Apps** → **Connect an app**
+3. Fill in required information:
+   - App name
+   - App description
+   - Privacy policy URL
+   - Terms of service URL
+
+#### Request API Access
+
+1. Go to **Add products** section
+2. Request access to **Login Kit**
+3. Request access to **Content Posting API**
+4. Fill in the required forms and wait for approval
+
+#### Configure OAuth Settings
+
+1. Go to **Login Kit** settings
+2. Note your **Client Key** and **Client Secret**
+3. Add **Redirect URIs**:
+   ```
+   http://localhost:3001/api/oauth/tiktok/callback
+   ```
+4. Set **Scopes**: Select all the scopes you need:
+   - `user.info.basic` (to get user info)
+   - `user.info.profile` (to get profile details)
+   - `user.info.stats` (to get user statistics)
+   - `video.upload` (to upload videos)
+   - `video.publish` (to publish videos)
+   - `video.list` (to list user videos)
+
+#### Important Notes
+
+- **TikTok only supports video content** - Text-only or image posts are not supported
+- Videos must meet TikTok's requirements:
+  - File format: MP4 or WebM
+  - Max file size: 287 MB
+  - Video duration: 3 seconds to 10 minutes
+  - Video resolution: Minimum 540p, recommended 720p or 1080p
+- **PKCE is required** for OAuth 2.0 flow
+- Access tokens expire after 24 hours (requires refresh)
+- Refresh tokens are valid for 365 days
+
+#### Testing
+
+- During development, your app is in "Draft" mode
+- Only registered test users can authorize the app
+- Submit your app for review to make it public
+
+---
+
 ## Backend Configuration
 
 ### 1. Update `.env` File
@@ -160,6 +215,10 @@ TWITTER_BEARER_TOKEN=your_twitter_bearer_token_here
 # LinkedIn
 LINKEDIN_CLIENT_ID=your_linkedin_client_id_here
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret_here
+
+# TikTok
+TIKTOK_CLIENT_KEY=your_tiktok_client_key_here
+TIKTOK_CLIENT_SECRET=your_tiktok_client_secret_here
 
 # File Upload
 MAX_FILE_SIZE=10485760
@@ -242,6 +301,17 @@ Access the app at: http://localhost:5173
 **Expected Result:**
 - Your LinkedIn profile appears as connected
 
+### 4. Connect TikTok
+
+1. Click **Connect Account** under TikTok
+2. Authorize the app on TikTok
+3. Grant all requested permissions (video upload, publish, user info)
+4. Redirected back with account connected
+
+**Expected Result:**
+- Your TikTok account appears with display name
+- Note: Only video content can be posted to TikTok
+
 ---
 
 ## Common Issues & Solutions
@@ -289,6 +359,32 @@ Access the app at: http://localhost:5173
   - Wait for approval
   - Some features require LinkedIn Page ownership
 
+### TikTok Issues
+
+**Problem:** "App not approved" or "Access denied"
+- **Solution:**
+  - Your app must be approved by TikTok to access API features
+  - During development, add test users in the TikTok Developer Portal
+  - Submit your app for review to make it public
+
+**Problem:** "Video upload failed"
+- **Solution:**
+  - Verify video meets TikTok requirements (MP4/WebM, < 287MB, 540p minimum)
+  - Ensure video duration is between 3 seconds and 10 minutes
+  - Check video codec is H.264 or H.265
+
+**Problem:** "Token expired" after 24 hours
+- **Solution:**
+  - TikTok access tokens expire after 24 hours
+  - Implement automatic token refresh using the refresh token
+  - Refresh tokens are valid for 365 days
+
+**Problem:** "Cannot post images or text-only content"
+- **Solution:**
+  - TikTok only supports video content
+  - You must upload a video file to post on TikTok
+  - Consider generating a video from images or skip TikTok for non-video posts
+
 ### General OAuth Issues
 
 **Problem:** "state parameter mismatch"
@@ -299,6 +395,7 @@ Access the app at: http://localhost:5173
   - Facebook: Tokens last 60 days, implement refresh before expiry
   - Twitter: Use refresh token endpoint
   - LinkedIn: Use refresh token endpoint
+  - TikTok: Tokens last 24 hours, use refresh token endpoint (refresh tokens valid 365 days)
 
 ---
 
@@ -318,6 +415,7 @@ https://yourdomain.com/api/oauth/{platform}/callback
 https://api.socialmediapublisher.com/api/oauth/facebook/callback
 https://api.socialmediapublisher.com/api/oauth/twitter/callback
 https://api.socialmediapublisher.com/api/oauth/linkedin/callback
+https://api.socialmediapublisher.com/api/oauth/tiktok/callback
 ```
 
 ### Update Environment Variables

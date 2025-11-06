@@ -2,6 +2,7 @@ import { InstagramService } from './InstagramService';
 import { FacebookService } from './FacebookService';
 import { TwitterService } from './TwitterService';
 import { LinkedInService } from './LinkedInService';
+import { TikTokService } from './TikTokService';
 import { AccountModel } from '../models/AccountModel';
 import { PostModel } from '../models/PostModel';
 import { PublicationHistoryModel } from '../models/MediaModel';
@@ -73,6 +74,19 @@ export class PublisherService {
               account.account_id,
               post.content,
               mediaUrls
+            );
+            break;
+
+          case 'tiktok':
+            // TikTok requires video file, not URL
+            // For now, skip if no video or use first media URL
+            if (!mediaUrls || mediaUrls.length === 0) {
+              throw new Error('TikTok requires a video file');
+            }
+            result = await TikTokService.publishFromUrl(
+              account.access_token,
+              post.content,
+              mediaUrls[0] // Assuming local file path
             );
             break;
 
@@ -174,6 +188,17 @@ export class PublisherService {
             account.account_id,
             post.content,
             mediaUrls
+          );
+          break;
+
+        case 'tiktok':
+          if (!mediaUrls || mediaUrls.length === 0) {
+            throw new Error('TikTok requires a video file');
+          }
+          result = await TikTokService.publishFromUrl(
+            account.access_token,
+            post.content,
+            mediaUrls[0]
           );
           break;
 

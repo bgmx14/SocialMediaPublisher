@@ -41,6 +41,11 @@ export const config = {
     clientSecret: process.env.LINKEDIN_CLIENT_SECRET || '',
   },
 
+  tiktok: {
+    clientKey: process.env.TIKTOK_CLIENT_KEY || '',
+    clientSecret: process.env.TIKTOK_CLIENT_SECRET || '',
+  },
+
   scheduler: {
     checkInterval: process.env.SCHEDULER_CHECK_INTERVAL || '*/1 * * * *', // Every minute
   },

@@ -13,6 +13,7 @@ export default function OAuthButton({ platform, onConnect, disabled }: OAuthButt
     facebook: 'Facebook',
     twitter: 'Twitter / X',
     linkedin: 'LinkedIn',
+    tiktok: 'TikTok',
   };
 
   const platformDescriptions: Record<SocialPlatform, string> = {
@@ -20,6 +21,7 @@ export default function OAuthButton({ platform, onConnect, disabled }: OAuthButt
     facebook: 'Connect your Facebook Pages',
     twitter: 'Connect your Twitter / X account',
     linkedin: 'Connect your LinkedIn profile',
+    tiktok: 'Connect your TikTok account',
   };
 
   return (
