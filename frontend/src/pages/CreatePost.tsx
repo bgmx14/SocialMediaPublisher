@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { postsApi, accountsApi, aiApi } from '../services/api';
 import { SocialPlatform, PostFormData } from '../types';
 import MediaUpload from '../components/MediaUpload';
-import { FiSave, FiSend, FiCalendar, FiSparkles } from 'react-icons/fi';
+import { FiSave, FiSend, FiCalendar, FiZap } from 'react-icons/fi';
 import { getPlatformIcon } from '../utils/helpers';
 import toast from 'react-hot-toast';
 
@@ -146,7 +146,7 @@ export default function CreatePost() {
               disabled={aiLoading}
               className="btn btn-secondary text-sm flex items-center gap-2"
             >
-              <FiSparkles className="w-4 h-4" />
+              <FiZap className="w-4 h-4" />
               Generate with AI
             </button>
           </div>
